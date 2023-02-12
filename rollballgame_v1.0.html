@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>Basic Scene with WebXR</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+	<link type="text/css" rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r126/three.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+	<script type="module">
+    // To start an AR scene with webXR, we can use a handy button provided by three.js
+    // We first have to import it because it is a javascript module
+    import { ARButton } from 'https://unpkg.com/three@0.126.0/examples/jsm/webxr/ARButton.js';
+    
+	let camera, scene, renderer;
+    let mesh;
+
+		init();
+		animate();
+
+		function init() {
+			const container = document.createElement('div');
+			document.body.appendChild(container);
+
+			scene = new THREE.Scene();
+
+			camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 40);
+            camera.position.set(0, 5, 20);
+            camera.lookAt(0, 0, 0);
+            //camera.position.y = 4;
+			renderer = new THREE.WebGLRenderer({ antialias: true});
+			renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+      // This next line is important to to enable the renderer for WebXR
+			//renderer.xr.enabled = true; // New!
+			container.appendChild(renderer.domElement);
+            
+            scene.add(new THREE.GridHelper(30, 30));
+     
+            
+            // Create a box for the tabletop
+            var tabletopGeometry = new THREE.BoxGeometry(10, 0.5, 10);
+            var tabletopMaterial = new THREE.MeshBasicMaterial({ color: 0x808080 });
+            var tabletop = new THREE.Mesh(tabletopGeometry, tabletopMaterial);
+            //tabletop.position.y = 1.25;
+            scene.add(tabletop);
+
+            // Create legs for the table
+            var legGeometry = new THREE.BoxGeometry(0.5, 2.5, 0.5);
+            var legMaterial = new THREE.MeshBasicMaterial({ color: 0x525252 });
+            var leg1 = new THREE.Mesh(legGeometry, legMaterial);
+            leg1.position.set(-2, -1.25, 1.5);
+            var leg2 = leg1.clone();
+            leg2.position.set(2, -1.25, 1.5);
+            var leg3 = leg1.clone();
+            leg3.position.set(-2, -1.25, -1.5);
+            var leg4 = leg1.clone();
+            leg4.position.set(2, -1.25, -1.5);
+            scene.add(leg1, leg2, leg3, leg4);
+
+            // Create a sphere for the ball
+            var ballGeometry = new THREE.SphereGeometry(1, 32, 32);
+            var ballMaterial = new THREE.MeshBasicMaterial({ color: 0x418200});
+            var ball = new THREE.Mesh(ballGeometry, ballMaterial);
+            ball.position.set(0, 1.5, 0);
+            scene.add(ball);
+			
+
+			// Add the AR button to the body of the DOM
+			document.body.appendChild(ARButton.createButton(renderer));
+
+			window.addEventListener('resize', onWindowResize, false);
+            // Listen for the devicemotion event
+            window.addEventListener("devicemotion", function (event) {
+            // Get the acceleration of the device
+                var acceleration = event.accelerationIncludingGravity;
+
+                // Update the position of the ball based on the acceleration
+                ball.position.x += acceleration.x * 0.008;
+                //ball.position.y += acceleration.y * 0.008;
+                ball.position.z += acceleration.z * 0.008;
+
+                // Make sure the ball stays within the bounds of the table
+                if (ball.position.x < -10 || ball.position.x > 10  ||
+                    ball.position.z < -10 || ball.position.z > 10){
+                // If the ball has gone over the edge of the table, remove it from the scene
+                ball.position.y -= 0.8;
+                }
+                // The speed at which the ball falls
+                var fallSpeed = 0;
+
+                // The function that updates the ball's position
+                function updateBall() {
+                // Increment the fall speed
+                fallSpeed -= 0.001;
+
+                // Update the ball's position
+                ball.position.y += fallSpeed;
+
+                // If the ball has fallen off the table
+                if (ball.position.y < 0.8) {
+                    // Reset the fall speed
+                    fallSpeed = 0;
+
+                    // Reset the ball's position
+                    ball.position.set(0, 1.5, 0);
+                }
+            requestAnimationFrame(updateBall);
+            }
+            });
+		}
+
+		function onWindowResize() {
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+
+			renderer.setSize(window.innerWidth, window.innerHeight);
+		}
+
+		function animate() {
+			renderer.setAnimationLoop(render);
+		}
+
+		function render() {  
+            requestAnimationFrame(render);    
+			renderer.render(scene, camera);
+		}
+        updateBall();
+        render();
+	</script>
+</body>
+
+</html>

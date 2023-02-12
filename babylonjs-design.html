@@ -1,0 +1,38 @@
+<html>
+  <head>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  </head>
+  <body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+      var canvas = document.getElementById("renderCanvas");
+      var engine = new BABYLON.Engine(canvas, true);
+
+      var scene = new BABYLON.Scene(engine);
+      var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 10, new BABYLON.Vector3(0, 0, 0), scene);
+      camera.setPosition(new BABYLON.Vector3(0, 0, 5));
+      camera.attachControl(canvas, true);
+
+      var light = new BABYLON.PointLight("pointLight", new BABYLON.Vector3(0, 10, 0), scene);
+
+      var ball = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1}, scene);
+      ball.position.y = 1;
+
+      var table = BABYLON.MeshBuilder.CreateBox("box", {width: 5, height: 0.5, depth: 5}, scene);
+
+      engine.runRenderLoop(function () {
+        scene.render();
+      });
+
+      window.addEventListener("resize", function () {
+        engine.resize();
+    
+      window.addEventListener('deviceorientation', function(event) {
+      ball.position.x = event.gamma / 90;
+      ball.position.y = -event.beta / 90;
+});
+
+      });
+    </script>
+  </body>
+</html>
